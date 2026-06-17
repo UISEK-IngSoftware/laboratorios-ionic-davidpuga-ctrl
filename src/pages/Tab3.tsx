@@ -1,7 +1,25 @@
-import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonViewDidEnter } from '@ionic/react';
+import React from 'react';
 import './Tab3.css';
+import { GithubUser } from '../interfaces/GithubUser'; 
+import { getUserInfo } from '../services/GithubService'; // Asegúrate de que se llame getUserInfo o getUserInf según tu servicio
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Tab3: React.FC = () => {
+    const [userInfo, setUserInfo] = React.useState<GithubUser | null>(null);
+    const [loading, setLoading] = React.useState<boolean>(true); // 1. Estado inicializado en true
+
+    const loadUserInfo = async () => {
+      setLoading(true); // 2. Activamos el spinner al empezar a buscar los datos
+      const userData = await getUserInfo(); 
+      setUserInfo(userData);
+      setLoading(false); // Desactivamos el spinner cuando los datos llegan
+    };
+
+    useIonViewDidEnter(() => {
+      loadUserInfo();
+    });
+
   return (
     <IonPage>
       <IonHeader>
@@ -16,19 +34,25 @@ const Tab3: React.FC = () => {
           </IonToolbar>
         </IonHeader>
 
-        <div className="card-container">
-          <IonCard className="card">
-            <img src="https://avatars.githubusercontent.com/u/235344001?s=400&u=345f0a31bba2f2d77a6dbfee439468f47d5ed9f9&v=4" alt="Avatar" />
-            <IonCardTitle>David Puga</IonCardTitle>
-            <IonCardSubtitle>davidpuga-ctrl</IonCardSubtitle>
-            <IonCardHeader>
+       {/* Opcional: Ocultamos la tarjeta si está cargando para que no se vea vacía */}
+       {!loading && userInfo && (
+         <div className="card-container">
+            <IonCard className="card">
+              <img src={userInfo?.avatar_url} alt={userInfo?.login} />
+              <IonCardHeader>
+                <IonCardTitle color="primary">{userInfo?.name}</IonCardTitle>
+                <IonCardSubtitle>{userInfo?.login}</IonCardSubtitle>
+              </IonCardHeader>
               <IonCardContent>
-                Hola, me gusta los negocios, los autos y la tecnologia.
+                {userInfo?.bio}
               </IonCardContent>
-            </IonCardHeader>
-          </IonCard>
-        </div>
+            </IonCard>
+          </div>
+       )}
 
+        {/* 3. Sintaxis corregida del componente LoadingSpinner */}
+        {loading && <LoadingSpinner isOpen={loading} />}
+        
       </IonContent>
     </IonPage>
   );
