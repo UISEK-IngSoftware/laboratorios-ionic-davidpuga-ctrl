@@ -1,24 +1,55 @@
-import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, useIonViewDidEnter } from '@ionic/react';
+import { 
+  IonButton,
+  IonCard, 
+  IonCardContent, 
+  IonCardHeader, 
+  IonCardSubtitle, 
+  IonCardTitle, 
+  IonContent, 
+  IonHeader, 
+  IonIcon, 
+  IonPage, 
+  IonText, 
+  IonTitle, 
+  IonToolbar, 
+  useIonViewDidEnter,
+  useIonViewWillEnter 
+} from '@ionic/react';
 import React from 'react';
 import './Tab3.css';
 import { GithubUser } from '../interfaces/GithubUser'; 
-import { getUserInfo } from '../services/GithubService'; // Asegúrate de que se llame getUserInfo o getUserInf según tu servicio
+import { getUserInfo } from '../services/GithubService'; 
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useHistory } from 'react-router';
+import AuthService from '../services/AuthService';
+import { logOutOutline } from 'ionicons/icons';
 
 const Tab3: React.FC = () => {
-    const [userInfo, setUserInfo] = React.useState<GithubUser | null>(null);
-    const [loading, setLoading] = React.useState<boolean>(true); // 1. Estado inicializado en true
+  const [userInfo, setUserInfo] = React.useState<GithubUser | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [errorMsg, setErrorMsg] = React.useState<string>(""); 
+  const history = useHistory()
 
-    const loadUserInfo = async () => {
-      setLoading(true); // 2. Activamos el spinner al empezar a buscar los datos
-      const userData = await getUserInfo(); 
-      setUserInfo(userData);
-      setLoading(false); // Desactivamos el spinner cuando los datos llegan
-    };
+  const loadUserInfo = async () => {
+    setLoading(true);
+    getUserInfo()
+      .then((user) => setUserInfo(user))
+      .catch((error) => setErrorMsg("Error al leer información de usuario. " + error))
+      .finally(() => setLoading(false));
+  };
 
-    useIonViewDidEnter(() => {
-      loadUserInfo();
-    });
+  const handleLogout = () =>{
+    AuthService.logout()
+    history.replace('/login')
+  }
+
+  useIonViewWillEnter(() => {
+    setErrorMsg("");
+  });
+
+  useIonViewDidEnter(() => {
+    loadUserInfo();
+  });
 
   return (
     <IonPage>
@@ -26,7 +57,8 @@ const Tab3: React.FC = () => {
         <IonToolbar>
           <IonTitle>Usuario</IonTitle>
         </IonToolbar>
-      </IonHeader>
+      </IonHeader> {/* CORREGIDO: Ya dice IonHeader y no ExpressHeader */}
+      
       <IonContent fullscreen>
         <IonHeader collapse="condense">
           <IonToolbar>
@@ -34,23 +66,29 @@ const Tab3: React.FC = () => {
           </IonToolbar>
         </IonHeader>
 
-       {/* Opcional: Ocultamos la tarjeta si está cargando para que no se vea vacía */}
-       {!loading && userInfo && (
-         <div className="card-container">
+        <div className="card-container">
+          {userInfo && (
             <IonCard className="card">
               <img src={userInfo?.avatar_url} alt={userInfo?.login} />
               <IonCardHeader>
                 <IonCardTitle color="primary">{userInfo?.name}</IonCardTitle>
                 <IonCardSubtitle>{userInfo?.login}</IonCardSubtitle>
               </IonCardHeader>
-              <IonCardContent>
-                {userInfo?.bio}
-              </IonCardContent>
+              <IonCardContent>{userInfo?.bio}</IonCardContent>
             </IonCard>
-          </div>
-       )}
+          )}
 
-        {/* 3. Sintaxis corregida del componente LoadingSpinner */}
+          {errorMsg !== "" && <IonText color="danger">{errorMsg}</IonText>}
+          <IonButton
+          expand='block'
+          color='danger'
+          onClick={handleLogout}
+          >
+            <IonIcon slot="start" icon={logOutOutline}/>
+            Salir
+          </IonButton>
+        </div>
+
         {loading && <LoadingSpinner isOpen={loading} />}
         
       </IonContent>

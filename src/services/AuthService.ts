@@ -1,0 +1,42 @@
+const TOKEN_KEY = 'github_auth_token'
+const USERNAME_KEY = 'github_auth_username'
+
+class AuthService {
+    login(username: string, token: string) {
+        if (username && token) {
+            this.logout();
+            // CORREGIDO: Ahora dice .setItem con la 't'
+            localStorage.setItem(USERNAME_KEY, username);
+            localStorage.setItem(TOKEN_KEY, token);
+            return true;
+        }
+        return false;
+    }
+
+    logout() {
+        localStorage.removeItem(USERNAME_KEY);
+        localStorage.removeItem(TOKEN_KEY);
+    }
+
+    isAuthenticated(): boolean {
+        return localStorage.getItem(TOKEN_KEY) != null &&
+            localStorage.getItem(USERNAME_KEY) != null;
+    }
+
+    getToken() {
+        return localStorage.getItem(TOKEN_KEY);
+    }
+
+    getUsername() {
+        return localStorage.getItem(USERNAME_KEY);
+    }
+
+    getAuthHeader() {
+        if (this.isAuthenticated()) {
+            return "Basic " + btoa(this.getUsername() + ":" + this.getToken());
+        }
+        return null;
+    }
+}
+
+export default new AuthService();

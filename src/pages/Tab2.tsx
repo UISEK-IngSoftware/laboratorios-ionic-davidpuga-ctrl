@@ -1,43 +1,45 @@
-import { IonButton, IonContent, IonHeader, IonInput, IonPage, IonTextarea, IonTitle, IonToolbar } from '@ionic/react';
-import { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { IonButton, IonContent, IonHeader, IonInput, IonPage, IonText, IonTextarea, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import './Tab2.css';
+import { useHistory } from 'react-router-dom';
 import { RepositoryPayload } from '../interfaces/RepositoryPayload';
 import { createRepository } from '../services/GithubService';
+import React from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Tab2: React.FC = () => {
+  const [loading, setLoading] = React.useState<boolean>(false);
   const history = useHistory();
-  
-  // Estados para manejar el formulario y el spinner
-  const [repoFormData, setRepoFormData] = useState<RepositoryPayload>({
-    name: "",
-    description: '',
-  });
-  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = React.useState<string>("");
+
+  const repoFormData: RepositoryPayload = {
+    name: '',
+    description: ''
+  };
+
+  const setRepoFormData = (value: string) => {
+    repoFormData.name = value;
+  }
+  const setRepoDescription = (value: string) => {
+    repoFormData.description = value;
+  }
 
   const saveRepository = () => {
     if (repoFormData.name.trim() === '') {
-      alert('El nombre del repositorio es obligatorio');
+      setErrorMsg("El nombre del repositorio es obligatorio.");
       return;
     }
-
-    setLoading(true); // Activa el spinner
-    createRepository(repoFormData)
-      .then(() => {
-        // Añadimos un pequeño retraso para darle tiempo a GitHub de actualizar su base de datos
-        setTimeout(() => {
-          history.push('/tab1'); // Navega tras el éxito
-        }, 500);
-      })
-      .catch(() => {
-        alert('Error al crear el repositorio');
-      })
-      .finally(() => {
-        setLoading(false); // Oculta el spinner pase lo que pase
-      });
+    setLoading(true);
+    createRepository(repoFormData).then(() => {
+      history.push('/tab1');
+    }).catch((error) => {
+      setErrorMsg("Error al crear el repositorio-> " + error);
+    }).finally(() => {
+      setLoading(false);
+    });
   };
 
+  useIonViewWillEnter(() => setErrorMsg(""))
+  
   return (
     <IonPage>
       <IonHeader>
@@ -51,7 +53,6 @@ const Tab2: React.FC = () => {
             <IonTitle size="large">Formulario de Repositorio</IonTitle>
           </IonToolbar>
         </IonHeader>
-
         <div className="form-container">
           <IonInput
             className='form-input'
@@ -60,9 +61,8 @@ const Tab2: React.FC = () => {
             fill='outline'
             placeholder='Nombre del Repositorio'
             value={repoFormData.name}
-            onIonChange={e => setRepoFormData({ ...repoFormData, name: e.detail.value! })}
+            onIonChange={(e) => setRepoFormData(e.detail.value!)}
           ></IonInput>
-          
           <IonTextarea
             className='form-field'
             label="Descripción del repositorio"
@@ -71,24 +71,24 @@ const Tab2: React.FC = () => {
             placeholder='Descripción del Repositorio'
             rows={5}
             value={repoFormData.description}
-            onIonChange={e => setRepoFormData({ ...repoFormData, description: e.detail.value! })}
+            onIonChange={(e) => setRepoDescription(e.detail.value!)}
             autoGrow
           ></IonTextarea>
-          
+            {errorMsg !== "" && (
+              <IonText color="danger">
+                {errorMsg}
+              </IonText>
+            )}
           <IonButton
             className='form-field'
             expand="block"
             fill='solid'
             onClick={saveRepository}
-            disabled={loading} // Deshabilita el botón mientras carga
           >
             Crear Repositorio
           </IonButton>
         </div>
-
-        {/* Renderizado condicional del spinner */}
         {loading && <LoadingSpinner isOpen={loading} />}
-        
       </IonContent>
     </IonPage>
   );

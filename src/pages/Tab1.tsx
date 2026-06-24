@@ -1,5 +1,5 @@
 import React from 'react';
-import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
+import { IonContent, IonHeader, IonList, IonPage, IonText, IonTitle, IonToolbar, useIonViewWillEnter } from '@ionic/react';
 import { fetchRepositories } from '../services/GithubService';
 import RepoItem from '../components/RepoItem';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -9,13 +9,16 @@ import './Tab1.css';
 const Tab1: React.FC = () => {
   const [repos, setRepos] = React.useState<Repository[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = React.useState<String>("");
 
   const loadRepos = async () => {
     setLoading(true);
-    const reposData = await fetchRepositories();
-    setRepos(reposData);
-    setLoading(false);
-  };
+    fetchRepositories().then((reposData)=>{
+      setRepos(reposData)
+    }).catch((error)=>{
+      setErrorMsg("Error al cargar repositorios. " + error);
+    }).finally(()=> setLoading(false))
+  }
 
   useIonViewWillEnter(() => {
     loadRepos();
@@ -28,17 +31,26 @@ const Tab1: React.FC = () => {
           <IonTitle>Repositorios</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent fullscreen className="ion-padding">
+        {/* Esto es lo que te faltaba (Cabecera colapsable del profe) */}
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Repositorios</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <IonList>
-          {repos.map((repo) => (
+          {repos.map(repo => (
             <RepoItem key={repo.id} {...repo} />
           ))}
         </IonList>
+
         {loading && <LoadingSpinner isOpen={loading} />}
-        {!loading && repos.length === 0 && (
-          <div>
-            <p>No se encontraron repositorios.</p>
-          </div>
+        
+        {errorMsg !== "" && (
+          <IonText color="danger">
+            {errorMsg}
+          </IonText>
         )}
       </IonContent>
     </IonPage>
