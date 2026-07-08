@@ -23,19 +23,18 @@ githubApiClient.interceptors.request.use(
 
 export const fetchRepositories = async (): Promise<Repository[]> => {
     try {
-        // Cambiado 'axios' por 'githubApiClient' para que aplique tu token de autenticación
         const response = await githubApiClient.get(`/user/repos`, {
             params: {
                 per_page: 100,
                 sort: 'created',
                 direction: 'desc',
                 affiliation: 'owner',
-                t: Date.now() // <-- Agregados los () para que funcione el cache-buster
+                t: Date.now() 
             },
         });
         return response.data;
     } catch (error) {
-        throw new Error((error as Error).message); // Corregido
+        throw new Error((error as Error).message); 
     }
 };
 
@@ -44,7 +43,7 @@ export const createRepository = async (repository: RepositoryPayload): Promise<R
         const response = await githubApiClient.post(`/user/repos`, repository); 
         return response.data as Repository;
     } catch (error) {
-        throw new Error((error as Error).message); // Corregido
+        throw new Error((error as Error).message); 
     }
 };
 
@@ -53,6 +52,25 @@ export const getUserInfo = async (): Promise<GithubUser | null> => {
         const response = await githubApiClient.get(`/user`); 
         return response.data as GithubUser;
     } catch (error) {
-        throw new Error((error as Error).message); // Corregido y agregado el punto y coma
+        throw new Error((error as Error).message); 
+    }
+};
+
+export const updateRepository = async (owner: string, repoName: string, data: RepositoryPayload): Promise<Repository> => {
+    try {
+        // Usamos PATCH porque la documentación oficial de GitHub lo requiere así para actualizar repositorios.
+        const response = await githubApiClient.patch(`/repos/${owner}/${repoName}`, data); 
+        return response.data as Repository;
+    } catch (error) {
+        throw new Error((error as Error).message);
+    }
+};
+
+export const deleteRepository = async (owner: string, repoName: string): Promise<void> => {
+    try {
+        // Usamos DELETE apuntando a la ruta específica del repositorio
+        await githubApiClient.delete(`/repos/${owner}/${repoName}`);
+    } catch (error) {
+        throw new Error((error as Error).message);
     }
 };

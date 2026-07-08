@@ -32,7 +32,6 @@ const Tab1: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
-        {/* Esto es lo que te faltaba (Cabecera colapsable del profe) */}
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">Repositorios</IonTitle>
@@ -41,7 +40,7 @@ const Tab1: React.FC = () => {
 
         <IonList>
           {repos.map(repo => (
-            <RepoItem key={repo.id} {...repo} />
+            <RepoItem key={repo.id} {...repo} onActionCompleted={loadRepos} />
           ))}
         </IonList>
 
